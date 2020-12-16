@@ -1,0 +1,33 @@
+---
+# tasks file for i3
+- name: 'Install packages from default repo'
+  package:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - i3
+    - build-essential
+    - gnome-flashback
+    - git
+
+- name: Git checkout i3-gnome
+  git:
+    repo: 'https://github.com/sauvaget/i3-gnome.git'
+    dest: /tmp/i3gnome
+
+- name: Install i3-gnome
+  shell:
+    cmd: make install
+    chdir: /tmp/i3gnome
+
+- name: Disable gnome Desktop
+  become: no
+  shell:
+    cmd: gsettings set org.gnome.gnome-flashback desktop false
+
+- name: Enable Wallpapers
+  become: no
+  shell:
+    cmd: gsettings set org.gnome.gnome-flashback root-background true
+
+- include_tasks: polybar.yml

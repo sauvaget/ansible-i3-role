@@ -1,0 +1,66 @@
+---
+# tasks file for i3
+- name: 'Install polybar'
+  package:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - polybar
+    - rofi
+
+- name: Create dir for config
+  become: no
+  file:
+    path: ~/.config/polybar
+    state: directory
+    mode: '0755'
+
+
+- name: Download Theme
+  become: no
+  unarchive:
+    src: https://github.com/adi1090x/files/raw/master/polybar-themes/themes/polybar-10.tar.gz
+    dest: /tmp/
+    remote_src: yes
+
+- name: Copy theme to config
+  become: no
+  shell: cp -r /tmp/polybar-10/* ~/.config/polybar/
+
+- name: Copy polybar custom config
+  become: no
+  copy:
+    src: polybar.ini
+    dest: ~/.config/polybar/config.ini
+
+- name: Copy polybar custom launcher
+  become: no
+  copy:
+    src: launch.sh
+    dest: ~/.config/polybar/launch.sh
+
+- name: Git checkout nerdfonts
+  git:
+    repo: 'https://github.com/ryanoasis/nerd-fonts.git'
+    dest: /tmp/nerdfonts
+    depth: "1"
+
+- name: Install nerdfonts
+  become: no
+  shell:
+    cmd: ./install.sh
+    chdir: /tmp/nerdfonts
+
+- name: Enable polybar in i3
+  become: no
+  lineinfile:
+    dest: ~/.config/i3/config
+    regexp: ".#polybarstartup" 
+    line: "exec --no-startup-id ~/.config/polybar/launch.sh #polybarstartup DO NOT REMOVE COMMENT"
+
+- name: Enable nm-applet in i3
+  become: no
+  lineinfile:
+    dest: ~/.config/i3/config
+    regexp: ".#nmappletstartup" 
+    line: "exec --no-startup-id nm-applet #nmappletstartup DO NOT REMOVE COMMENT"
